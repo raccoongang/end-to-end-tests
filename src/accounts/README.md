@@ -84,22 +84,31 @@ export default class SamlEnterpriseBackend implements AccountBackend {
 
 ### Plugin API
 
-`AccountBackend` (`types.ts`) has two required methods and three optional ones:
+`AccountBackend` (`types.ts`) has two required methods and four optional ones:
 
 | Method             | Required | Runs when                                             | Default when omitted              |
 | ------------------ | -------- | ----------------------------------------------------- | --------------------------------- |
 | `createIdentity`   | yes      | An account is about to be registered                  | —                                 |
 | `activate`         | yes      | Just after registration, to make sign-in possible     | —                                 |
+| `register`         | no       | To create the account itself                          | LMS registration API              |
 | `signIn`           | no       | Headless sign-in that captures reusable storage state | LMS login-session API             |
 | `signInThroughUi`  | no       | A spec signs in through the browser                   | authn MFE `/login` form           |
 | `signOutThroughUi` | no       | A spec signs out through the browser                  | header account-menu sign-out link |
 
 Each receives a single context object: `config` and `request` for the account
-methods, plus `identity` (`activate`), `credentials` (`signIn`,
+methods, plus `identity` (`register`, `activate`), `credentials` (`signIn`,
 `signInThroughUi`), or `page` and `username` (the UI flows). The defaults are
 exported as `defaultSignIn`, `defaultSignInThroughUi`, and
 `defaultSignOutThroughUi`, so a plugin that replaces only one flow can delegate
 the rest.
+
+`register` is what makes an install viable when the LMS is not the source of
+identity. The default provisioning path posts to the LMS registration API, which
+an SSO/IdP target typically does not expose at all — so such a backend replaces
+the step rather than wrapping it. It runs between `createIdentity` and
+`activate`, and a backend that implements it should leave the account in the same
+state the LMS API would: existing, and ready for `activate` to make it able to
+sign in.
 
 The optional flows are what make an SSO install viable: `signIn` is what the
 `setup` project uses to capture `.auth/<role>.json` for **every** role including
