@@ -108,7 +108,10 @@ an SSO/IdP target typically does not expose at all — so such a backend replace
 the step rather than wrapping it. It runs between `createIdentity` and
 `activate`, and a backend that implements it should leave the account in the same
 state the LMS API would: existing, and ready for `activate` to make it able to
-sign in.
+sign in. Note that when account creation does not itself authenticate the request
+context (the LMS API does; a separate identity service generally does not), the
+learner auth contract signs in through `signIn` afterwards rather than storing an
+anonymous session.
 
 The optional flows are what make an SSO install viable: `signIn` is what the
 `setup` project uses to capture `.auth/<role>.json` for **every** role including
